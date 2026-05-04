@@ -1,0 +1,11 @@
+# modules/vault/variables.tf
+
+variable "namespace"         { type = string }
+variable "release_name"      { type = string }
+variable "postgres_host"     { type = string }
+variable "postgres_user"     { type = string }
+variable "postgres_password" {
+  type      = string
+  sensitive = true
+}
+variable "postgres_db"       { type = string }
