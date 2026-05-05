@@ -39,6 +39,19 @@ kubectl exec -it -n bci-infra deploy/vault -- vault operator unseal <UNSEAL_KEY>
 ```
 
 ## 4) Test de conectividad desde otro namespace
+Primero crea el AppRole + policy + secreto (KV v1) para el test:
+```bash
+export VAULT_TOKEN=<ROOT_TOKEN>
+./scripts/vault-approle-bootstrap-test.sh
+```
+
+Luego configura Terraform con el `role_id` y `secret_id` generados:
+```bash
+cd vault-connectivity-test
+cp terraform.tfvars.example terraform.tfvars
+# edita terraform.tfvars y pega vault_role_id / vault_secret_id
+```
+
 ```bash
 cd vault-connectivity-test
 terraform init
