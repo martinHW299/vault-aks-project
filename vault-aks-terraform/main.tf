@@ -81,7 +81,7 @@ module "postgresql" {
 module "vault" {
   source = "./modules/vault"
 
-  namespace         = kubernetes_namespace.bci_infra.metadata[0].name
+  namespace = kubernetes_namespace.bci_infra.metadata[0].name
 
   postgres_host     = module.postgresql.server_fqdn
   postgres_user     = var.postgres_admin_user

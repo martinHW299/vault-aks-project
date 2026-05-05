@@ -138,8 +138,8 @@ resource "kubernetes_job" "vault_db_init" {
         restart_policy = "OnFailure"
 
         container {
-          name    = "vault-db-init"
-          image   = "postgres:15"
+          name  = "vault-db-init"
+          image = "postgres:15"
 
           env {
             name  = "PGPASSWORD"
