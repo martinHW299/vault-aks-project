@@ -72,14 +72,16 @@ vault-ui   LoadBalancer   20.XX.XX.XX       8200:XXXXX/TCP
 ## Test (con otro microservicio)
 
 ```bash
-kubectl create namespace bci-cit-test
+cd ~/vault-connectivity-test
 
-kubectl run ms-test \
-  -n bci-cit-test \
-  --image=curlimages/curl \
-  --restart=Never \
-  -- sleep 3600
+terraform init
+terraform apply
+```
 
+namespace: bci-cit-test
+pod: ms-test
+
+```bash
 kubectl exec -it -n bci-cit-test ms-test -- \
   curl -i http://vault-server-service.bci-infra:8200/v1/sys/health
 ```
