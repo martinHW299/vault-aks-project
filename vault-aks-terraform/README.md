@@ -108,13 +108,3 @@ curl $VAULT_ADDR/v1/sys/health
 |-----------------------|----------------|
 | Infraestructura base  | `bci-infra`    |
 | Corredora (ejemplo)   | `bci-cit-...`  |
-
-## .gitignore recomendado
-
-```
-.terraform/
-terraform.tfstate
-terraform.tfstate.backup
-terraform.tfvars        # ⚠️ contiene passwords
-.terraform.lock.hcl
-```
