@@ -3,6 +3,14 @@
 variable "resource_group_name" { type = string }
 variable "location" { type = string }
 
+# Backward-compat: antiguamente este módulo recibía `namespace` cuando creaba
+# PostgreSQL dentro de Kubernetes. Hoy PostgreSQL es Azure Flexible Server, pero
+# dejamos este input como opcional para evitar errores de tooling/caches.
+variable "namespace" {
+  type    = string
+  default = null
+}
+
 variable "server_name" {
   description = "Nombre del Azure PostgreSQL Flexible Server"
   type        = string
