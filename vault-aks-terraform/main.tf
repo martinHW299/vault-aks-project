@@ -15,7 +15,7 @@ resource "azurerm_resource_group" "infra" {
 
 resource "azurerm_resource_group" "app" {
   name     = var.rg_app_name
-  location = var.location
+  location = coalesce(var.app_location, var.location)
 
   tags = {
     project     = var.project
@@ -67,12 +67,24 @@ resource "kubernetes_namespace" "bci_infra" {
 module "postgresql" {
   source = "./modules/postgresql"
 
-  namespace      = kubernetes_namespace.bci_infra.metadata[0].name
+  resource_group_name = azurerm_resource_group.app.name
+  location            = azurerm_resource_group.app.location
+
+  server_name    = var.postgres_server_name
   admin_user     = var.postgres_admin_user
   admin_password = var.postgres_admin_password
   db_name        = var.postgres_db_name
 
-  depends_on = [kubernetes_namespace.bci_infra]
+  # Lab: permite conexión desde "Azure services". Ajusta/retira en prod.
+  firewall_rules = [
+    {
+      name     = "allow-azure-services"
+      start_ip = "0.0.0.0"
+      end_ip   = "0.0.0.0"
+    }
+  ]
+
+  depends_on = [azurerm_resource_group.app]
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -83,10 +95,10 @@ module "vault" {
 
   namespace = kubernetes_namespace.bci_infra.metadata[0].name
 
-  postgres_host     = module.postgresql.server_fqdn
-  postgres_user     = var.postgres_admin_user
+  postgres_host     = module.postgresql.postgres_host
+  postgres_user     = module.postgresql.postgres_user
   postgres_password = var.postgres_admin_password
-  postgres_db       = var.postgres_db_name
+  postgres_db       = module.postgresql.postgres_db
 
   depends_on = [module.aks, module.postgresql]
 }

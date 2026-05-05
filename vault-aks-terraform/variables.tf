@@ -4,6 +4,12 @@ variable "location" {
   default     = "eastus"
 }
 
+variable "app_location" {
+  description = "Azure region para recursos de app (p.ej., PostgreSQL en rg-bci-app)"
+  type        = string
+  default     = null
+}
+
 variable "project" {
   description = "Project/organization prefix"
   type        = string
@@ -40,7 +46,7 @@ variable "aks_node_count" {
 
 variable "aks_node_size" {
   type    = string
-  default = "Standard_D2s_v3"
+  default = "B_Standard_B1ms"
 }
 
 variable "kubernetes_version" {
@@ -62,6 +68,12 @@ variable "postgres_admin_password" {
 variable "postgres_db_name" {
   type    = string
   default = "vault"
+}
+
+# ─── Azure PostgreSQL Flexible Server ─────────────────────────────────────────
+variable "postgres_server_name" {
+  type    = string
+  default = "psql-bci-vault"
 }
 
 # ─── Vault ───────────────────────────────────────────────────────────────────

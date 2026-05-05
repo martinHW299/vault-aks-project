@@ -13,11 +13,10 @@
 ## Deploy
 
 ```bash
+cd vault-aks-terraform
 terraform init
 terraform apply
 ```
-
-⏱️ El apply tarda aproximadamente **10-15 minutos** (AKS tarda más).
 
 ## Paso 3 — Conectarse al cluster
 
@@ -54,20 +53,16 @@ kubectl exec -it -n bci-infra deploy/vault -- \
 
 ```bash
 kubectl get svc vault-server-service -n bci-infra
-# Copia la EXTERNAL-IP
-```
-
-```
-NAME       TYPE           EXTERNAL-IP       PORT(S)
-vault-ui   LoadBalancer   20.XX.XX.XX       8200:XXXXX/TCP
 ```
 
 ## Entregables
 
 | Variable      | Valor                                  |
 |---------------|----------------------------------------|
-| `VAULT_ADDR`  | `http://<EXTERNAL-IP>:8200`            |
+| `VAULT_ADDR`  | `http://vault-server-service.bci-infra:8200` |
 | `VAULT_TOKEN` | `hvs.XXXX` (Initial Root Token)        |
+
+Nota: Azure PostgreSQL Flexible Server requiere backups (no existe retención 0); el módulo usa el mínimo típico de `7` días.
 
 ## Test (con otro microservicio)
 

@@ -1,174 +1,44 @@
 # modules/postgresql/main.tf
-# PostgreSQL como pod dentro del AKS — namespace bci-infra
+# Azure Database for PostgreSQL Flexible Server (RG: rg-bci-app)
 
-resource "kubernetes_persistent_volume_claim" "postgres" {
-  metadata {
-    name      = "postgresql-pvc"
-    namespace = var.namespace
-  }
+resource "azurerm_postgresql_flexible_server" "this" {
+  name                = var.server_name
+  resource_group_name = var.resource_group_name
+  location            = var.location
 
-  spec {
-    access_modes = ["ReadWriteOnce"]
-    resources {
-      requests = {
-        storage = "5Gi"
-      }
-    }
-  }
+  administrator_login    = var.admin_user
+  administrator_password = var.admin_password
 
-  wait_until_bound = false
-}
+  version    = var.postgres_version
+  sku_name   = var.sku_name
+  storage_mb = var.storage_mb
 
-resource "kubernetes_stateful_set" "postgres" {
-  metadata {
-    name      = "postgresql"
-    namespace = var.namespace
-    labels = {
-      app = "postgresql"
-    }
-  }
+  public_network_access_enabled = true
 
-  spec {
-    service_name = "postgresql"
-    replicas     = 1
+  backup_retention_days        = var.backup_retention_days
+  geo_redundant_backup_enabled = false
 
-    selector {
-      match_labels = {
-        app = "postgresql"
-      }
-    }
-
-    template {
-      metadata {
-        labels = {
-          app = "postgresql"
-        }
-      }
-
-      spec {
-        container {
-          name  = "postgresql"
-          image = "postgres:15"
-
-          port {
-            container_port = 5432
-          }
-
-          env {
-            name  = "POSTGRES_DB"
-            value = var.db_name
-          }
-          env {
-            name  = "POSTGRES_USER"
-            value = var.admin_user
-          }
-          env {
-            name  = "POSTGRES_PASSWORD"
-            value = var.admin_password
-          }
-          env {
-            name  = "PGDATA"
-            value = "/var/lib/postgresql/data/pgdata"
-          }
-
-          volume_mount {
-            name       = "postgresql-storage"
-            mount_path = "/var/lib/postgresql/data"
-          }
-
-          resources {
-            requests = {
-              cpu    = "100m"
-              memory = "256Mi"
-            }
-            limits = {
-              cpu    = "500m"
-              memory = "512Mi"
-            }
-          }
-        }
-
-        volume {
-          name = "postgresql-storage"
-          persistent_volume_claim {
-            claim_name = kubernetes_persistent_volume_claim.postgres.metadata[0].name
-          }
-        }
-      }
-    }
-  }
-
-  wait_for_rollout = false
-}
-
-resource "kubernetes_service" "postgres" {
-  metadata {
-    name      = "postgresql"
-    namespace = var.namespace
-    labels = {
-      app = "postgresql"
-    }
-  }
-
-  spec {
-    selector = {
-      app = "postgresql"
-    }
-
-    port {
-      port        = 5432
-      target_port = 5432
-    }
-
-    type = "ClusterIP"
+  lifecycle {
+    ignore_changes = [
+      # Evita intentos de rotar/cambiar zona de un servidor ya creado.
+      # Azure no permite cambiar `zone` libremente (solo con HA standby AZ).
+      zone,
+    ]
   }
 }
 
-# ─── Job que crea la tabla vault_kv_store automáticamente ────────────────────
-resource "kubernetes_job" "vault_db_init" {
-  metadata {
-    name      = "vault-db-init"
-    namespace = var.namespace
-  }
+resource "azurerm_postgresql_flexible_server_database" "vault" {
+  name      = var.db_name
+  server_id = azurerm_postgresql_flexible_server.this.id
+  collation = "en_US.utf8"
+  charset   = "UTF8"
+}
 
-  spec {
-    template {
-      metadata {}
-      spec {
-        restart_policy = "OnFailure"
+resource "azurerm_postgresql_flexible_server_firewall_rule" "this" {
+  for_each = { for r in var.firewall_rules : r.name => r }
 
-        container {
-          name  = "vault-db-init"
-          image = "postgres:15"
-
-          env {
-            name  = "PGPASSWORD"
-            value = var.admin_password
-          }
-
-          command = [
-            "psql",
-            "--host=postgresql",
-            "--username=${var.admin_user}",
-            "--dbname=${var.db_name}",
-            "--command=CREATE TABLE IF NOT EXISTS vault_kv_store (parent_path TEXT COLLATE \"C\" NOT NULL, path TEXT COLLATE \"C\", key TEXT COLLATE \"C\", value BYTEA, CONSTRAINT pkey PRIMARY KEY (path, key)); CREATE INDEX IF NOT EXISTS parent_path_idx ON vault_kv_store (parent_path);"
-          ]
-        }
-      }
-    }
-
-    # Reintentar hasta 5 veces por si PostgreSQL no está listo aún
-    backoff_limit = 5
-  }
-
-  wait_for_completion = true
-
-  timeouts {
-    create = "3m"
-  }
-
-  depends_on = [
-    kubernetes_stateful_set.postgres,
-    kubernetes_service.postgres
-  ]
+  name             = each.value.name
+  server_id        = azurerm_postgresql_flexible_server.this.id
+  start_ip_address = each.value.start_ip
+  end_ip_address   = each.value.end_ip
 }
