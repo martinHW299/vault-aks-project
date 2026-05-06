@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ms-java
+  namespace: bci-cit-test
+  labels:
+    app: ms-java
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ms-java
+  template:
+    metadata:
+      labels:
+        app: ms-java
+    spec:
+      containers:
+        - name: ms-java
+          image: <ACR_LOGIN_SERVER>/ms-java:1.0.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+              name: http
+          env:
+            - name: VAULT_ADDR
+              value: "http://vault-server-service.bci-infra:8200"
+            - name: VAULT_SECRETS_PATH
+              value: "secret/myapp/test"
+          envFrom:
+            - secretRef:
+                name: ms-java-vault-approle
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 250m
+              memory: 256Mi
+

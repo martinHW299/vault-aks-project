@@ -13,4 +13,30 @@ override.tf.json
 *_override.tf.json
 .terraformrc
 terraform.rc
+
+# Java / Maven
+target/
+**/target/
+*.class
+*.jar
+*.war
+*.ear
+.mvn/wrapper/maven-wrapper.jar
+
+# IDEs
+.idea/
+**/.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+**/.vscode/
+
+# OS
+.DS_Store
+
+# Local env files
+.env
+.env.*
+
 .DS_Store
