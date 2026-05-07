@@ -42,3 +42,5 @@ target/
 .DS_Store
 
 01-secret-approle.yaml
+
+myagent/
