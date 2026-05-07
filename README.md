@@ -136,6 +136,7 @@ Manifests incluidos:
 - Secret (ejemplo): `k8s/ms-java/10-secret-approle.example.yaml`
 - Deployment: `k8s/ms-java/20-deployment.yaml` (reemplaza `<ACR_LOGIN_SERVER>`)
 - Service: `k8s/ms-java/30-service.yaml`
+- Service (LoadBalancer, opción rápida): `k8s/ms-java/31-service-loadbalancer.yaml`
 - Ingress (ejemplo): `k8s/ms-java/40-ingress.example.yaml`
 
 ### 7.1 Crear namespace
@@ -160,10 +161,22 @@ kubectl apply -f k8s/ms-java/20-deployment.yaml
 kubectl apply -f k8s/ms-java/30-service.yaml
 ```
 
+### 7.4 (Opción A) Exponer el MS con Service LoadBalancer
+**Tipo:** Manifest  
+**Para qué:** Obtener una IP pública y acceder sin `port-forward`.
+
+```bash
+kubectl apply -f k8s/ms-java/31-service-loadbalancer.yaml
+kubectl -n bci-cit-test get svc ms-java-lb -w
+```
+
+Cuando aparezca `EXTERNAL-IP`, prueba:
+- `GET http://<EXTERNAL-IP>/actuator/health`
+- `GET http://<EXTERNAL-IP>/vault/health`
+
 ### 7.4 Probar el MS desde tu máquina (port-forward al service del MS)
 ```bash
 kubectl -n bci-cit-test get pods
 kubectl -n bci-cit-test port-forward svc/ms-java 8080:80
 curl -s http://127.0.0.1:8080/vault/secret
 ```
-

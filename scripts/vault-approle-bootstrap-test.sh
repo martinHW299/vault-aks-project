@@ -3,7 +3,7 @@ set -eu
 
 NAMESPACE="${NAMESPACE:-bci-infra}"
 VAULT_DEPLOYMENT="${VAULT_DEPLOYMENT:-vault}"
-VAULT_ADDR_IN_POD="${VAULT_ADDR_IN_POD:-http://127.0.0.1:8200}"
+VAULT_ADDR_IN_POD="${VAULT_ADDR_IN_POD:-http://vault-server-service.bci-infra:8200}"
 
 PROFILE="${PROFILE:-test}"
 SECRETS_PATH="${SECRETS_PATH:-secret/myapp/${PROFILE}}"

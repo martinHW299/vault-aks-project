@@ -40,3 +40,5 @@ target/
 .env.*
 
 .DS_Store
+
+01-secret-approle.yaml
